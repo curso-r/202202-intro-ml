@@ -1,0 +1,206 @@
+---
+output: github_document
+params:
+  trilha_clean: programacao_para_ciencia_de_dados
+  main_repo: main-intro-programacao
+  turma: 202102-intro-programacao
+  nome_curso: ATUALIZANDO....
+  num_aula: '0'
+  download_material: 'FALSE'
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE
+)
+
+library(magrittr)
+```
+
+## Informações importantes
+
+```{r results='asis'}
+if(params$download_material == TRUE){
+ glue::glue("- [Clique aqui](https://github.com/curso-r/{params$main_repo}/raw/master/material_do_curso.zip) para baixar o material do curso.")
+  }
+```
+
+- Nosso blog: [https://curso-r.com/blog/](https://curso-r.com/blog/)
+
+- Nossos livros: [Ciência de Dados em R](https://livro.curso-r.com/) e [Zen do R](https://curso-r.github.io/zen-do-r/)
+
+## Dúvidas
+
+Fora do horário de aula ou monitoria:
+
+- perguntas gerais sobre o curso deverão ser feitas no Classroom.
+
+- perguntas sobre R, principalmente as que envolverem código, deverão ser enviadas no [nosso fórum](https://discourse.curso-r.com/).
+
+
+## Slides
+
+```{r}
+paths <- CursoRopen:::list_github_files(params$main_repo, "slides/", "[0-9]-.*html$") %>% 
+  tibble::enframe(value = "paths") %>% 
+  dplyr::filter(!stringr::str_detect(paths, "figure-html")) %>% 
+  dplyr::mutate(file_path_sem_extencao = tools::file_path_sans_ext(paths)) %>% 
+  dplyr::select(-name)
+
+
+paths_pdf <- CursoRopen:::list_github_files(params$main_repo, "slides/", "[0-9]-.*pdf$") %>% 
+  tibble::enframe(value = "paths_pdf") %>% 
+  dplyr::mutate(file_path_sem_extencao = tools::file_path_sans_ext(paths_pdf)) %>%
+  dplyr::select(-name)
+
+dplyr::left_join(paths, paths_pdf, by = "file_path_sem_extencao") %>% 
+dplyr::mutate(
+  slide = paths,
+  link = paste0("https://curso-r.github.io/", params$main_repo, "/", slide),
+  slides = glue::glue("[{basename(slide)}]({link})"),
+  slide_pdf = paths_pdf,
+  link_pdf = paste0("https://curso-r.github.io/", params$main_repo, "/", slide_pdf),
+  pdf = glue::glue("[{basename(slide_pdf)}]({link_pdf})")
+) %>% 
+  dplyr::filter(!stringr::str_detect(slide, "_files/")) %>%
+  dplyr::select(slides, pdf) %>% 
+  knitr::kable()
+```
+
+
+## Scripts utilizados em aula
+
+```{r}
+pasta <- "exemplos_de_aula/"
+
+
+knitr::kable(
+  tibble::tibble(
+    script = CursoRopen:::list_github_files(params$main_repo, pasta, ".R$"),
+    link = paste0(
+      "https://github.com/curso-r/",
+      params$turma,
+      "/blob/master/",
+      script
+    )
+  ) %>%
+    dplyr::mutate(script = glue::glue("[{script}]({link})")) %>%
+    dplyr::select(script)
+)
+```
+
+
+## Lição de casa
+
+```{r}
+tibble::tibble(
+  nome = CursoRopen:::list_github_files(params$main_repo, "exercicios/"),
+  link = paste0("https://curso-r.github.io/", params$main_repo, "/", nome),
+  exercicio = glue::glue("[{nome}]({link})")
+) %>%
+    dplyr::filter(!stringr::str_detect(nome, "resolucao_")) %>% 
+  dplyr::select(exercicio) %>% 
+  knitr::kable()
+```
+
+
+## Trabalhos finais premiados
+
+```{r echo=FALSE}
+nome_pasta <- "trabalhos_premiados"
+
+tibble::tibble(
+  script = CursoRopen:::list_github_files(params$turma, nome_pasta, ".zip|.rar"),
+  link = paste0(
+    "https://github.com/curso-r/",
+    params$turma,
+    "/raw/master/",
+    script
+  ),
+  pasta_compactada = glue::glue("[{script}]({link})")
+) %>% 
+  dplyr::select(pasta_compactada) %>% 
+  knitr::kable()
+```
+
+
+
+## Material extra
+
+Referências extras relacionadas com o conteúdos das aulas, ou materiais que comentamos quando tiramos dúvidas (não necessariamente são relacionadas com o conteúdo da aula).
+
+```{r echo=FALSE, message=FALSE}
+safe_buscar_materiais_extras <- purrr::possibly(.f = function(main_repo = params$main_repo, 
+                                                              trilha_clean = params$trilha_clean){
+  library(magrittr, include.only = "%>%")
+  googlesheets4::gs4_deauth()
+googledrive::drive_deauth()
+
+id_spreadsheet <- "1YV2vz52u2HXw1IhjrJ7dGhk7sim-9zRM" %>%
+  googledrive::as_id() %>%
+  googledrive::drive_ls() %>%
+  dplyr::filter(name %in% params$trilha_clean) %>%
+  dplyr::pull(id) %>%
+  googlesheets4::as_sheets_id()
+
+
+id_spreadsheet %>%
+  googlesheets4::read_sheet(stringr::str_remove(main_repo, "main-")) %>%
+  dplyr::mutate(link = glue::glue("[{desc}]({url})")) %>%
+  dplyr::select(-desc,-url) %>%
+  dplyr::arrange(aula) %>%
+  # dplyr::filter(aula <= params$num_aula) %>%
+  knitr::kable(col.names = c("Aula", "Tema", "Descrição")) 
+}, "erro")
+
+
+tabela <- safe_buscar_materiais_extras()
+
+if(tabela[1] == "erro") {
+  print("Verificar tabela de materiais extras")
+} else{
+  tabela
+}
+
+```
+
+## Redes sociais da Curso-R
+
+
+Youtube: https://www.youtube.com/c/CursoR6/featured
+
+Instagram: https://www.instagram.com/cursoo_r/
+
+Twitter: https://twitter.com/curso_r
+
+Linkedin: https://www.linkedin.com/company/curso-r/
+
+Facebook: https://www.facebook.com/cursodeR
+
+
+
+```{r include=FALSE}
+# Criar arquivo _config.yml
+if(params$download_material == TRUE){
+ glue::glue('theme: jekyll-theme-minimal', '\n',
+    "logo: assets/logo.png", '\n',
+    "title: {params$nome_curso}", '\n',
+    "show_downloads: true", '\n',
+    "link_material: 'https://github.com/curso-r/{params$main_repo}/raw/master/material_do_curso.zip'", '\n'
+    
+    ) %>%
+    readr::write_lines( "_config.yml")
+}
+
+if(params$download_material == FALSE){
+  glue::glue('theme: jekyll-theme-minimal', '\n',
+    "logo: assets/logo.png", '\n',
+    "title: {params$nome_curso}", '\n',
+    "show_downloads: false", '\n') %>%
+    readr::write_lines( "_config.yml")
+}
+```

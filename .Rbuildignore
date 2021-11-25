@@ -1,0 +1,11 @@
+^\.github$
+^template-pagina-do-curso\.Rproj$
+^\.Rproj\.user$
+^assets$
+^dados$
+^exemplos_de_aula$
+^exercicios$
+^_layouts$
+^_config\.yml$
+^README\.Rmd$
+^LICENSE\.md$

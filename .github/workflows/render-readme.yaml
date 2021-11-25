@@ -1,0 +1,98 @@
+on:
+  workflow_dispatch:
+    inputs:
+      main_repo:
+        description: 'main_repo: Nome do repositorio main'
+        required: true
+        default: 'main-r4ds-1'
+      turma:
+        description: 'turma: codigo da turma. ex: 202110-r4ds-1'
+        required: true
+        default: '202110-r4ds-1'
+      nome_curso:
+        description: 'nome_curso: Nome do curso'
+        required: true
+        default: 'R para Ciência de Dados 1'
+      download_material:
+        description: 'download_material: TRUE ou FALSE, se o curso tem zip para baixar'
+        required: true
+        default: 'TRUE'
+      trilha_clean:
+        description: 'trilha_clean: nome da trilha em snake case e sem acentos. ex: programacao_para_ciencia_de_dados'
+        required: true
+        default: 'programacao_para_ciencia_de_dados'
+      pat:
+        description: 'GitHub PAT com permissão de workflow.'
+        required: true
+        default: '...'
+
+name: render-readme
+
+jobs:
+  render:
+
+    name: render-readme
+
+    runs-on: ubuntu-18.04
+
+    env:
+      RSPM: "https://packagemanager.rstudio.com/all/__linux__/bionic/latest"
+      GITHUB_PAT: ${{ secrets.PAT }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ github.event.inputs.pat }}
+      - uses: r-lib/actions/setup-r@v1
+      - uses: r-lib/actions/setup-pandoc@v1
+
+      - name: Install pak and query dependencies
+        run: |
+          install.packages("pak", repos = "https://r-lib.github.io/p/pak/dev/")
+          saveRDS(pak::pkg_deps("local::.", dependencies = TRUE), ".github/r-depends.rds")
+        shell: Rscript {0}
+
+      - name: Restore R package cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ env.R_LIBS_USER }}/*
+            !${{ env.R_LIBS_USER }}/pak
+          key: ${{ matrix.config.os }}-${{ steps.install-r.outputs.installed-r-version }}-1-${{ hashFiles('.github/r-depends.rds') }}
+          restore-keys: ${{ matrix.config.os }}-${{ steps.install-r.outputs.installed-r-version }}-1-
+
+      - name: Install system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          pak::local_system_requirements(execute = TRUE)
+          pak::pkg_system_requirements("rcmdcheck", execute = TRUE)
+        shell: Rscript {0}
+
+      - name: Install dependencies
+        run: |
+          pak::local_install_dev_deps(upgrade = TRUE)
+          pak::local_install(".")
+        shell: Rscript {0}
+
+      - name: Execute Script
+        env:
+          MAIN_REPO: ${{ github.event.inputs.main_repo }}
+          TURMA: ${{ github.event.inputs.turma }}
+          NOME_CURSO: ${{ github.event.inputs.nome_curso }}
+          DOWNLOAD_MATERIAL: ${{ github.event.inputs.download_material }}
+          TRILHA_CLEAN: ${{ github.event.inputs.trilha_clean }}
+        run: |
+          Rscript "inst/render_readme.R"
+
+      - name: Commit results
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add README.Rmd
+          git add README.md
+          mv --verbose inst/atualizar_pagina_do_curso.yaml .github/workflows/atualizar_pagina_do_curso.yaml
+          git add .github/workflows/atualizar_pagina_do_curso.yaml
+          git add _config.yml
+          git add .github/r-depends.rds
+          git commit -m "Atualizando README" || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
