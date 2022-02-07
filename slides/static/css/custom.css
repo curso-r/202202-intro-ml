@@ -1,0 +1,103 @@
+.center2 {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.dan {
+    position: fixed;
+    top: 190px;
+    left: 40px;
+    width: 220px;
+    height: 200px;
+}
+
+div.dan {
+  position: fixed;
+  top: 230px;
+  left: 300px;
+}
+
+.willy {
+    position: fixed;
+    top: 410px;
+    left: 40px;
+    width: 220px;
+    height: 200px;
+}
+
+div.willy {
+  position: fixed;
+  top: 450px;
+  left: 300px;
+  width: 300px;
+}
+
+.cantodireito {
+    position: fixed;
+    top: 20px;
+    right: 40px;
+}
+
+.smart_cat {
+    position: fixed;
+    top: 230px;
+    right: 100px;
+}
+
+.carros {
+    position: fixed;
+    top: 230px;
+    right: 40px;
+    width: 380px;
+    height: 300px;
+}
+
+.ozonio {
+    position: fixed;
+    top: 230px;
+    left: 40px;
+    width: 380px;
+    height: 300px;
+}
+
+.google {
+    position: fixed;
+    top: 100px;
+    left: 90px;
+    height: 490px;
+}
+.sem-padding {
+  padding: 0;
+}
+.cinza { 
+  color: #999999; 
+}
+
+.pull-left-maior {
+  float: left;
+  width: 60%;
+}
+.pull-right-maior {
+  float: right;
+  width: 60%;
+}
+.pull-left-menor {
+  float: left;
+  width: 34%;
+}
+.pull-right-menor {
+  float: right;
+  width: 34%;
+}
+.footnote {
+  position: absolute;
+  bottom: 2em;
+  padding-right: 4em;
+  font-size: 80%;
+}
+.pull-right-abaixo{
+  clear: none;
+  float: right;
+  width: 47%;
+}

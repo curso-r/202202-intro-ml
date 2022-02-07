@@ -1,70 +1,87 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-## Informações importantes
+## Configuração: Criar um projeto do RStudio
 
-  - Nosso blog: <https://curso-r.com/blog/>
+Faça um projeto do RStudio para usar durante todo o curso. O código
+abaixo irá fazer isso para você.
 
-  - Nossos livros: [Ciência de Dados em R](https://livro.curso-r.com/) e
-    [Zen do R](https://curso-r.github.io/zen-do-r/)
+``` r
+install.packages("usethis")
+usethis::create_project("introml202108")
+```
+
+## Configuração: Instalar pacotes
+
+``` r
+install.packages('tidyverse')
+install.packages('tidymodels')
+install.packages('rmarkdown')
+install.packages('knitr')
+install.packages('ISLR')
+install.packages('glmnet')
+install.packages('xgboost')
+install.packages('randomForest')
+install.packages('ranger')
+install.packages('rpart')
+install.packages('rpart.plot')
+install.packages('pROC')
+install.packages('vip')
+install.packages('modeldata')
+install.packages('usemodels')
+install.packages('tidypredict')
+install.packages('jpeg')
+install.packages('MASS')
+install.packages('DataExplorer')
+install.packages('skimr')
+install.packages('naniar')
+install.packages('patchwork')
+```
 
 ## Dúvidas
 
 Fora do horário de aula ou monitoria:
 
-  - perguntas gerais sobre o curso deverão ser feitas no Classroom.
+-   perguntas gerais sobre o curso deverão ser feitas no Classroom.
 
-  - perguntas sobre R, principalmente as que envolverem código, deverão
+-   perguntas sobre R, principalmente as que envolverem código, deverão
     ser enviadas no [nosso fórum](https://discourse.curso-r.com/).
 
 ## Slides
 
-| slides                                                                                                  | pdf                                              |
-| :------------------------------------------------------------------------------------------------------ | :----------------------------------------------- |
-| [00-intro-curso.html](https://curso-r.github.io/main-intro-ml/slides/00-intro-curso.html)               | [NA](https://curso-r.github.io/main-intro-ml/NA) |
-| [01-intro-ml.html](https://curso-r.github.io/main-intro-ml/slides/01-intro-ml.html)                     | [NA](https://curso-r.github.io/main-intro-ml/NA) |
-| [03-modelos-de-arvores.html](https://curso-r.github.io/main-intro-ml/slides/03-modelos-de-arvores.html) | [NA](https://curso-r.github.io/main-intro-ml/NA) |
-| [html](https://curso-r.github.io/main-intro-ml/slides/03-modelos-de-arvores_cache/html)                 | [NA](https://curso-r.github.io/main-intro-ml/NA) |
-| [04-dataprep.html](https://curso-r.github.io/main-intro-ml/slides/04-dataprep.html)                     | [NA](https://curso-r.github.io/main-intro-ml/NA) |
+| slide                       | link                                                                           |
+|:----------------------------|:-------------------------------------------------------------------------------|
+| 00-intro-curso.html         | <https://curso-r.github.io/202108-intro-ml/slides/00-intro-curso.html>         |
+| 01-intro-ml.html            | <https://curso-r.github.io/202108-intro-ml/slides/01-intro-ml.html>            |
+| 02-intro-classificacao.html | <https://curso-r.github.io/202108-intro-ml/slides/02-intro-classificacao.html> |
+| 03-dataprep-pt2.html        | <https://curso-r.github.io/202108-intro-ml/slides/03-dataprep-pt2.html>        |
+| 03-modelos-de-arvores.html  | <https://curso-r.github.io/202108-intro-ml/slides/03-modelos-de-arvores.html>  |
 
-## Scripts utilizados em aula
+## Referências externas
 
-| script |
-| :----- |
+#### Machine Learning
 
-## Lição de casa
+-   [Introduction to Statistical Learning (Hastie, et
+    al)](https://web.stanford.edu/~hastie/ISLRv2_website.pdf)
+-   [Elements of Statistical Learning (Hastie, et
+    al)](https://web.stanford.edu/~hastie/Papers/ESLII.pdf)
+-   [Computer Age Statistical Inference (Hastie,
+    Efron)](https://web.stanford.edu/~hastie/CASI_files/PDF/casi.pdf)
+-   [Tidymodels (Kuhn, et al)](https://www.tidymodels.org/)
+-   [Feature Engineering and Selection: A Practical Approach for
+    Predictive Models (Kuhn, Kjell)](http://www.feat.engineering/)
+-   [Kaggle](https://www.kaggle.com/)
 
-| exercicio                                                                                                          |
-| :----------------------------------------------------------------------------------------------------------------- |
-| [exercicios/01-tidymodels.R](https://curso-r.github.io/main-intro-ml/exercicios/01-tidymodels.R)                   |
-| [exercicios/02-overfitting.R](https://curso-r.github.io/main-intro-ml/exercicios/02-overfitting.R)                 |
-| [exercicios/03-cross-validation.R](https://curso-r.github.io/main-intro-ml/exercicios/03-cross-validation.R)       |
-| [exercicios/04-regressao-linear.R](https://curso-r.github.io/main-intro-ml/exercicios/04-regressao-linear.R)       |
-| [exercicios/05-regressao-logistica.R](https://curso-r.github.io/main-intro-ml/exercicios/05-regressao-logistica.R) |
-| [exercicios/06-random-forest.R](https://curso-r.github.io/main-intro-ml/exercicios/06-random-forest.R)             |
+#### Programação em R
 
-## Trabalhos finais premiados
+-   [Livro da Curso-R (Curso-R)](https://livro.curso-r.com/)
+-   [Tidyverse (Wickham H)](https://www.tidyverse.org/)
+-   [R for Data Science (Wickham H)](https://r4ds.had.co.nz/)
+-   [Advanced R (Wickham H)](https://adv-r.hadley.nz/)
 
-| pasta\_compactada |
-| :---------------- |
+#### Miscelânea
 
-## Material extra
-
-Referências extras relacionadas com o conteúdos das aulas, ou materiais
-que comentamos quando tiramos dúvidas (não necessariamente são
-relacionadas com o conteúdo da aula).
-
-| Aula | Tema | Descrição |
-| :--- | :--- | :-------- |
-
-## Redes sociais da Curso-R
-
-Youtube: <https://www.youtube.com/c/CursoR6/featured>
-
-Instagram: <https://www.instagram.com/cursoo_r/>
-
-Twitter: <https://twitter.com/curso_r>
-
-Linkedin: <https://www.linkedin.com/company/curso-r/>
-
-Facebook: <https://www.facebook.com/cursodeR>
+-   [Tidytext (Silges, et al)](https://www.tidytextmining.com/)
+-   [Tabnet model (Falbel)](https://mlverse.github.io/tabnet/)
+-   [Forecasting: Principles and Practive (Hyndman,
+    Athanasopoulos)](https://otexts.com/fpp3/)

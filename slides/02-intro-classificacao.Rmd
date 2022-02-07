@@ -1,0 +1,962 @@
+---
+title: "Introdução ao Machine Learning"
+subtitle: "Dataprep e Classificação"
+author: "<img src = 'https://d33wubrfki0l68.cloudfront.net/9b0699f18268059bdd2e5c21538a29eade7cbd2b/67e5c/img/logo/cursor1-5.png' width = '40%'>"
+date: "`r paste(lubridate::month(Sys.Date(), label = TRUE, abbr = FALSE), 'de', lubridate::year(Sys.Date()))`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["default", "default-fonts", "static/css/custom.css", "static/css/xaringan-themer.css"]
+    nature:
+      ratio: '16:9'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(magrittr)
+library(knitr)
+library(tidyverse)
+library(ISLR)
+library(kableExtra)
+library(rpart)
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  message = FALSE, 
+  warning = FALSE,
+  fig.width=6, 
+  fig.height=6,
+  fig.align='center'
+)
+theme_set(theme_minimal(14))
+options(htmltools.dir.version = FALSE)
+```
+
+
+class: middle, center, inverse
+
+# Dataprep Parte I
+
+---
+
+# Conteúdo
+
+- Preditores categóricos
+
+- Transformações 1:1
+
+- Transformações 1:n
+
+- Regressão Logística
+
+- Matriz de Confusão
+
+- Métricas de Classificação
+
+- Curva ROC
+
+- Múltiplas Notas de Corte
+
+
+
+---
+
+## Preditores Categóricos
+
+### Preditor com apenas 2 categorias
+
+Saldo médio no cartão de crédito é diferente entre homens e mulheres?
+
+```{r, fig.height=1.5}
+mtcars %>%
+  mutate(am = ifelse(am == 1, "Manual", "Automático")) %>% 
+  ggplot(aes(x = am, y = mpg, fill = am)) +
+  geom_boxplot(show.legend = FALSE) +
+  coord_flip() +
+  labs(y = "Milhas por galão", x = "")
+```
+
+
+$$
+y_i = \beta_0 + \beta_1x_i \space\space\space\space\space\space \text{em que}\space\space\space\space\space\space x_i = \Bigg\\{\begin{array}{ll}1&\text{se o i-ésimo carro for }\texttt{manual}\\\\
+0&\text{se o i-ésimo carro for } \texttt{automático}\end{array}
+$$
+
+
+.footnote[
+Ver [ISL](https://www.ime.unicamp.br/~dias/Intoduction%20to%20Statistical%20Learning.pdf) página 84 (Predictors with Only Two Levels).
+]
+
+
+
+---
+
+## Preditores Categóricos
+
+### Preditor com 3 ou mais categorias
+
+.pull-left[
+
+```{r, fig.height=4}
+library(modeldata)
+data(Sacramento)
+Sacramento %>%
+  ggplot(aes(x = type, y = price, fill = type)) +
+  geom_boxplot(show.legend = FALSE) +
+  coord_flip() +
+  labs(y = "Preço (USD)", x = "") +
+  theme_minimal(22)
+```
+
+]
+
+.pull-right[
+
+Exemplo: Modelo linear
+
+$$y_i = \beta_0 + \beta_1x_{1i} + \beta_2x_{2i}$$
+
+Em que
+
+
+$x_{1i} = \Bigg \{ \begin{array}{ll} 1 & \text{se for }\texttt{Multi_Family}\\0&\text{caso contrário}\end{array}$
+
+$x_{2i} = \Bigg \{ \begin{array}{ll} 1 & \text{se for }\texttt{Residential}\\0&\text{caso contrário}\end{array}$
+
+]
+
+
+---
+
+## Preditores Categóricos
+
+### Preditor com 3 ou mais categorias
+
+"One hot enconding" ou "Dummies" ou "Indicadores".
+
+```{r}
+library(modeldata)
+data("Sacramento")
+Sacramento %>% group_by(type) %>% sample_n(2) %>% select(type) %>%
+  ungroup() %>% sample_frac() %>% 
+  cbind(model.matrix(~type, data = .)) %>% 
+  knitr::kable(format = "html")
+```
+
+steps: `step_dummy()`
+
+---
+
+## Preditores Categóricos
+
+### Preditor com 3 ou mais categorias
+
+As previsões para cada categoria ficaria assim:
+
+$y_{i} = \left\{ \begin{array}{ll} \beta_0 & \text{se for }\texttt{Condo}\\ \beta_0 + \beta_1&\text{se for } \texttt{Multi_Family}\\ \beta_0 + \beta_2&\text{se for } \texttt{Residential}\end{array}\right.$
+
+
+---
+
+## Transformações Não Lineares dos Preditores
+
+### Exemplo: log
+
+```{r}
+library(patchwork)
+set.seed(1)
+y_x <- tibble(
+  x = runif(60),
+  y = 10 + 0.5*log(x) + rnorm(30, sd = 0.1)
+) 
+
+grafico_y_x <- y_x %>%
+  ggplot(aes(x = x, y = y)) + 
+  geom_point( size = 3) 
+
+
+grafico_y_x_curvas <- grafico_y_x +
+  labs(colour = "Modelo") +
+  theme(legend.position = "left") 
+
+grafico_y_x_log <- grafico_y_x + aes(x = log(x)) + labs(x = "log(x)")
+```
+
+```{r, fig.width=9, fig.height=3, fig.align="center", dpi=300}
+grafico_y_x_curvas + grafico_y_x_log
+```
+
+
+---
+
+## Transformações Não Lineares dos Preditores
+
+### Exemplo: log
+
+.pull-left[
+
+
+```{r, fig.width=4, fig.height=2.5, fig.align="center", dpi=300}
+grafico_y_x_curvas +
+  geom_smooth(aes(colour = "y ~ x"), method = "lm", se = FALSE, formula = y ~ x) +
+  geom_smooth(aes(colour = "y ~ log(x)"), method = "lm", se = FALSE, formula = y ~ log(x)) +
+  labs(colour = "Modelo") +
+  theme(legend.position = "None") 
+```
+
+]
+
+.pull-right[
+
+Relação real entre `x` e `y`: $y = 10 + 0.5log(x)$ 
+
+Modelos propostos: 
+
+  1) `y ~ x` 
+  
+  2) `y ~ log(x)`
+]
+
+
+Outras transformações comuns: raíz quadrada, Box-Cox.
+
+steps: `step_log()`, `step_BoxCox()`, `step_sqrt()`
+
+---
+
+## Transformações Não Lineares dos Preditores
+
+#### Exemplo: Regressão Polinomial
+
+.pull-left[
+Relação real: $y = 500 + 0.4(x-10)^3$ 
+]
+
+Modelo proposto: $y = \beta_0 + \beta_1x + \beta_2x^2 + \beta_3x^3$ 
+
+
+```{r, fig.height=3.9, fig.width=11, dpi=300}
+set.seed(1)
+y_x_poly <- tibble(
+  x = runif(30, 0, 20),
+  y = 500 + 0.4 * (x-10)^3 + rnorm(30, sd = 50)
+)
+
+
+grafico_y_x_poly <- y_x_poly %>%
+  ggplot(aes(x = x, y = y)) + 
+  geom_point( size = 3) 
+
+
+grafico_y_x_poly_curvas <- grafico_y_x_poly +
+  geom_smooth(aes(colour = "y ~ x"), method = "lm", se = FALSE, formula = y ~ x) +
+  geom_smooth(aes(colour = "y ~ poly(x, 2)"), method = "lm", se = FALSE, formula = y ~ poly(x, 2)) +
+  geom_smooth(aes(colour = "y ~ poly(x, 3)"), method = "lm", se = FALSE, formula = y ~ poly(x, 3)) +
+  labs(colour = "Modelo") 
+grafico_y_x_poly + grafico_y_x_poly_curvas
+```
+
+Outras expansões comuns: b-splines, natural splines.
+
+steps: `step_poly()`, `step_bs()`, `step_ns`
+
+
+---
+
+## Transformações Não Lineares dos Preditores
+
+#### Exemplo: Regressão Polinomial
+
+.pull-left[
+
+```{r}
+y_x_poly %>%
+  rename(idade = x) %>%
+  relocate(idade, .after = y) %>%
+  mutate(
+    idade2 = idade^2,
+    idade3 = idade^3
+  ) %>%
+  mutate_all(round, digits = 1) %>%
+  slice(1:8) %>%
+  kableExtra::kable(format = "html")
+```
+
+]
+
+
+.pull-right[
+
+Outras expansões comuns: b-splines, natural splines.
+
+steps: `step_poly()`, `step_bs()`, `step_ns`
+
+]
+
+---
+
+## Interações
+
+Interação entre duas variáveis explicativas: `species` e `bill_length_mm`
+
+```{r, out.height=180, out.height=330, fig.height=2.5, fig.width=4.5, fig.align="center"}
+palmerpenguins::penguins %>%
+  ggplot(aes(x = flipper_length_mm, y = bill_length_mm)) +
+  geom_point(aes(colour = species)) +
+  geom_smooth(method = "lm", aes(colour = species), se = FALSE) +
+  theme_minimal(10)
+```
+
+
+
+---
+
+## Interações
+
+Modelo proposto (Matemático): Seja `y = flipper_length_mm` e `x = bill_length_mm`,
+
+$$\small \begin{array}{l} y = \beta_0 + \beta_1x\end{array}$$
+
+
+
+```{r, out.height=180, out.height=260, fig.height=2, fig.width=4, fig.align="center"}
+palmerpenguins::penguins %>%
+  ggplot(aes(x = flipper_length_mm, y = bill_length_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, colour = "black") +
+  theme_minimal(10)
+```
+
+
+Modelo proposto (em R): `Sepal.Width ~ Sepal.Length`
+
+---
+
+## Interações
+
+Modelo proposto (Matemático): Seja `y = Sepal.Width` e `x = Sepal.Length`,
+
+$$\small \begin{array}{l} y = \beta_0 + \beta_1x + \beta_2I_{versicolor} + \beta_3I_{virginica}\end{array}$$
+
+
+```{r, out.height=180, out.height=260, fig.height=2, fig.width=4, fig.align="center"}
+mod_pen <- lm(bill_length_mm ~ flipper_length_mm + species, data = 
+                 palmerpenguins::penguins)
+
+palmerpenguins::penguins %>%
+  mutate(
+    pred = predict(mod_pen, .) 
+  ) %>%
+  ggplot(aes(x = flipper_length_mm, y = bill_length_mm)) +
+  geom_point(aes(colour = species)) +
+  geom_smooth(method = "lm", se = FALSE, colour = "black") +
+  geom_line(aes(y = pred, colour = species), size = 1) + 
+  theme_minimal(10)
+```
+
+
+Modelo proposto (em R): `Sepal.Width ~ Sepal.Length + Species`
+
+
+---
+
+## Interações
+
+Modelo proposto (Matemático): Seja `y = Sepal.Width` e `x = Sepal.Length`,
+
+$$\small \begin{array}{l} y = \beta_0 + \beta_1x + \beta_2I_{versicolor} + \beta_3I_{virginica} + \beta_4\color{red}{xI_{versicolor}} + \beta_5\color{red}{xI_{virginica}}\end{array}$$
+
+
+```{r, out.height=180, out.height=260, fig.height=2, fig.width=4, fig.align="center"}
+palmerpenguins::penguins %>%
+  ggplot(aes(x = flipper_length_mm, y = bill_length_mm)) +
+  geom_point(aes(colour = species)) +
+  geom_smooth(method = "lm", se = FALSE, colour = "black") +
+  geom_smooth(method = "lm", aes(colour = species), se = FALSE) +
+  theme_minimal(10)
+```
+
+
+Modelo proposto (em R): `step_interact(~flipper_length_mm:starts_with("species_"))`.
+
+---
+class: middle, center
+
+## Exemplo 04
+
+---
+
+## Outras referências
+
+- Transformações recomendadas p/ cada modelo: https://www.tmwr.org/pre-proc-table.html
+
+- Lista de transformações do recipes: https://recipes.tidymodels.org/reference/index.html
+
+- Embbed: p/ quando o preditor tem muitas categorias: https://embed.tidymodels.org/ 
+
+- Textos: quando colunas tem textos https://github.com/tidymodels/textrecipes
+
+- Séries temporais: https://business-science.github.io/timetk/reference/index.html#section-feature-engineering-operations-recipe-steps-
+
+---
+exclude: false
+
+---
+
+class: middle, center, inverse
+
+# Classificação
+
+---
+
+# Regressão Logística
+
+
+.pull-left[
+
+### Para  $Y \in \{0, 1\}$ (binário)
+
+$$
+log\left\(\frac{p}{1-p}\right\) = \beta_0 + \beta_1x
+$$
+
+Ou...
+
+$$
+p = \frac{1}{1 + e^{-(\beta_0 + \beta_1x)}}
+$$
+
+
+```{r, eval = FALSE, echo = TRUE}
+### No R:
+logistic_reg() %>%
+  fit(spam ~ exclamacoes, data = dt_spam)
+```
+
+]
+
+
+.pull-right[
+
+```{r,echo = FALSE, fig.height=5, out.width=400}
+set.seed(1)
+email <- tibble(
+  pts_exclamacao = sample.int(300, 1000, replace = TRUE),
+  x = runif(1000) - 0.5,
+  spam = rbinom(1000, 1, prob = 1/(1 + exp(-(-5.9 + 1/23*pts_exclamacao + 2 * x)))),
+  `Regressão Linear` = predict(lm(spam~pts_exclamacao)),
+  `Regressão Logística` = predict(glm(spam~pts_exclamacao, family = binomial()), type = "response")
+)
+
+email %>%
+  sample_n(100) %>%
+  gather("modelo", "pred", starts_with("Reg")) %>%
+  ggplot(aes(x = pts_exclamacao, y = spam)) +
+  geom_point(size = 5, alpha = 0.2)  +
+  geom_line(size = 2.5, aes(y = pred, colour = modelo), show.legend = FALSE) +
+  facet_wrap(~ modelo) +
+  theme_minimal(20)+
+  labs(
+    title = "Y = 1: E-mail é Spam", x = "Qtd de pontos de exclamação"
+  ) +
+  scale_y_continuous(breaks = c(0, 1), labels = c("Y = 0", "Y = 1")) +
+  theme(axis.title.y = element_blank())
+```
+
+
+
+.footnote[
+Ver [ISL](https://www.ime.unicamp.br/~dias/Intoduction%20to%20Statistical%20Learning.pdf) página 131 (Logistic Regression).
+]
+
+
+]
+
+
+
+
+---
+
+# Regressão Logística
+
+```{r,echo = FALSE, fig.height=6, fig.width=10, warning=FALSE, message=FALSE}
+email %>%
+  select(-`Regressão Linear`) %>%
+  # sample_n(100) %>%
+  gather("modelo", "pred", starts_with("Reg")) %>%
+  ggplot(aes(x = pts_exclamacao, y = spam)) +
+  geom_point(size = 5, alpha = 0.2)  +
+  geom_line(size = 3, aes(y = pred, colour = modelo), show.legend = FALSE) +
+  stat_summary_bin(size = 1, alpha = 0.7, colour = "purple", aes(x = pts_exclamacao))  +
+  facet_wrap(~ modelo) +
+  theme_minimal(20)+
+  labs(
+    title = "Y = 1: E-mail é Spam", x = "Qtd de pontos de exclamação"
+  ) +
+  scale_y_continuous(breaks = c(0, 1), labels = c("Y = 0", "Y = 1")) +
+  theme(axis.title.y = element_blank())
+```
+
+
+---
+
+# Regressão Logística
+
+```{r, fig.height=6, fig.align="center", fig.width=8, echo=FALSE}
+set.seed(5)
+tempo_de_relacionamento <- runif(40)
+idade <- runif(40)
+churn <- rbinom(40, 1, prob = 1/(1 + exp(-4 + 4*tempo_de_relacionamento + 4*idade)))
+xxy <- data.frame(tempo_de_relacionamento, idade, churn)
+xxy$tempo_de_relacionamentoidade <- ifelse(tempo_de_relacionamento + idade > 1, 0, 1)
+# Compute the linear regression (z = ax + by + d)
+fit <- glm(churn ~ tempo_de_relacionamento + idade, family = "binomial")
+# predict values on regular xy grid
+grid.lines = 26
+tempo_de_relacionamento.pred <- seq(min(tempo_de_relacionamento), max(tempo_de_relacionamento), length.out = grid.lines)
+idade.pred <- seq(min(idade), max(idade), length.out = grid.lines)
+xx <- expand.grid( tempo_de_relacionamento = tempo_de_relacionamento.pred, idade = idade.pred)
+y.pred <- matrix(predict(fit, newdata = xx, type = "response"),
+                 nrow = grid.lines, ncol = grid.lines)
+library(plotly)
+fig <- plot_ly(data = xxy) %>%
+  add_trace(x = ~tempo_de_relacionamento, y = ~idade, z = ~churn, color = ~tempo_de_relacionamentoidade,
+            type = "scatter3d", mode = "markers",
+            opacity = .8) %>%
+  add_trace(z = y.pred,
+            x = tempo_de_relacionamento.pred,
+            y = idade.pred,
+            type = "surface",
+            opacity = .9)
+fig
+```
+
+
+---
+
+# Árvore de Decisão
+
+```{r, fig.height=6, fig.align="center", fig.width=8, echo=FALSE}
+library(rpart)
+set.seed(6)
+tempo_de_relacionamento <- runif(600)
+idade <- runif(600)
+churn <- rbinom(600, 1, prob = 1/(1 + exp(-4 + 4*tempo_de_relacionamento + 4*idade)))
+xxy <- data.frame(tempo_de_relacionamento, idade, churn)
+xxy$tempo_de_relacionamentoidade <- ifelse(tempo_de_relacionamento + idade > 1, 0, 1)
+# Compute the linear regression (z = ax + by + d)
+fit <- rpart::rpart(churn ~ tempo_de_relacionamento + idade, data = xxy, control = rpart.control(cp = 0.03, minsplit = 2))
+# predict values on regular xy grid
+grid.lines = 26
+tempo_de_relacionamento.pred <- seq(min(tempo_de_relacionamento), max(tempo_de_relacionamento), length.out = grid.lines)
+idade.pred <- seq(min(idade), max(idade), length.out = grid.lines)
+xx <- expand.grid( tempo_de_relacionamento = tempo_de_relacionamento.pred, idade = idade.pred)
+y.pred <- matrix(predict(fit, newdata = xx),
+                 nrow = grid.lines, ncol = grid.lines)
+library(plotly)
+fig <- plot_ly(data = xxy[1:40,]) %>%
+  add_trace(x = ~tempo_de_relacionamento, y = ~idade, z = ~churn, color = ~tempo_de_relacionamentoidade,
+            type = "scatter3d", mode = "markers",
+            opacity = .8) %>%
+  add_trace(z = y.pred,
+            x = tempo_de_relacionamento.pred,
+            y = idade.pred,
+            type = "surface",
+            opacity = .9)
+fig
+```
+
+
+---
+
+# Regressão Logística - Custo
+
+A **Métrica** que a regressão logística usa de **Função de Custo** chama-se *log-loss* (ou *Binary Cross-Entropy*):
+
+$$D = \frac{-1}{N}\sum[y_i \log\hat{y_i} + (1 - y_i )\log(1 - \hat{y_i})]$$
+
+Para cada linha da base de dados seria assim...
+
+.pull-left[
+
+
+$$D_i = \begin{cases} \\ -\log(\hat{y}_i) & \text{quando} \space y_i = 1 \\\\\\ -\log(1-\hat{y}_i) & \text{quando} \space y_i = 0 \\ \!\end{cases}$$
+
+]
+
+.pull-rigth[
+
+```{r, fig.width=8, fig.height=7.5, fig.retina=TRUE, out.height=280}
+y1 = ggplot(tibble(y_hat = c(1, 0.001)), aes(x = y_hat)) +
+  stat_function(fun = ~-log(.), size = 2) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(y = "D", x = bquote(hat(y)), title = "Quando y = 1") +
+  theme_minimal(26) +
+  theme(
+    panel.grid = element_blank(),
+    axis.line = element_line(colour = "black", size = 1.5),
+    axis.text = element_text(colour = "black", size = 26)
+  )
+
+y2 = ggplot(tibble(y_hat = 1-c(1, 0.001)), aes(x = y_hat)) +
+  stat_function(fun = ~-log(1-.), size = 2) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(y = "D", x = bquote(hat(y)), title = "Quando y = 0") +
+  theme_minimal(26) +
+  theme(
+    panel.grid = element_blank(),
+    axis.line = element_line(colour = "black", size = 1.5),
+    axis.text = element_text(colour = "black", size = 26)
+  )
+library(patchwork)
+y1/y2
+```
+
+]
+
+
+---
+
+# Regressão Logística - Regularização
+
+A **Métrica** que a regressão logística usa de **Função de Custo** chama-se *log-loss* (ou *Binary Cross-Entropy*):
+
+
+$$D = \frac{-1}{N}\sum[y_i \log\hat{y_i} + (1 - y_i )\log(1 - \hat{y_i})]$$
+
+Regularizar é analogo a Regressão Linear.
+
+$$D_{regularizado} = D + \color{red}{\lambda}\sum_{j = 1}^{p}|\beta_j|$$
+
+**PS1:** Se $\log\left(\frac{\hat{p_i}}{1-\hat{p_i}}\right) = \beta_0 + \beta_1x$ então
+$\hat{p_i} = \frac{1}{1 + e^{-(\beta_0 + \beta_1x)}}$.
+
+
+
+---
+
+# Regressão Logística - Predições
+
+O "produto final" será um vetor de probabilidades estimadas.
+
+.pull-left[
+
+```{r, echo = FALSE}
+email_tratado <- email %>%
+  select(pts_exclamacao, spam, `Regressão Logística`) %>%
+  rename(
+    prob = `Regressão Logística`,
+    `pts excl` = pts_exclamacao,
+    `classe observada` = spam
+  ) %>%
+  mutate(
+    prob = round(prob, 2),
+    `classe predita` = if_else(prob < 0.5, "Não Spam", "Spam"),
+    `classe observada` = if_else(`classe observada` == 0, "Não Spam", "Spam"),
+  )
+
+email_tratado %>%
+  head() %>%
+  knitr::kable() %>%
+  kableExtra::row_spec(0:6, align = "center", background = "white") %>%
+  kableExtra::column_spec(3:4,  color = "purple", bold = TRUE)
+```
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+email_tratado %>%
+  ggplot(aes(x = `prob`, fill = `classe observada`, colour = `classe observada`)) +
+  geom_density(alpha = 0.2, size = 2) +
+  geom_vline(xintercept = 0.5, size = 2, colour = "purple", linetype = "dashed") +
+  geom_label(x = 0.5, y = 5, hjust = -0.1, label = "threshold", colour = "purple", size = 7, fontface = "bold", fill = "#f0deff") +
+  theme_minimal(22) +
+  labs(y = NULL, x = "prob") +
+  theme(
+    legend.position = "bottom"
+  ) +
+  guides(fill = guide_legend(nrow = 2, ncol = 1, byrow = TRUE))
+```
+
+
+]
+
+
+---
+
+```{r, echo=FALSE}
+confusion_matrix_kable <- function(threshold, font_size = 20) {
+  header <- c(1, 2)
+  names(header) <- c(paste0("p > ", scales::percent(threshold)), "Observado")
+  email %>%
+    mutate(
+      Predito = factor(if_else(`Regressão Logística` < threshold, "Não Spam", "Spam"), levels = c("Não Spam", "Spam")),
+      spam = factor(if_else(spam == 0, "Não Spam", "Spam"), levels = c("Não Spam", "Spam")),
+    ) %>%
+    count(Predito, spam) %>%
+    spread(spam, n, fill = 0) %>%
+    kable() %>%
+    kable_styling(c("bordered", "basic"), full_width = FALSE, font_size = font_size) %>%
+    add_header_above(header, background = "white", color = c("red", "black", "black")) %>%
+    collapse_rows(columns = 1, valign = "top") %>%
+    kableExtra::row_spec(0:2, background = "white", align = "center") %>%
+    kableExtra::column_spec(1, "3in", bold = TRUE) %>%
+    kableExtra::column_spec(2, "3in") %>%
+    kableExtra::column_spec(3, "2in")
+}
+
+
+cm_num <- confusion_matrix_kable(threshold = 0.5)
+
+cm <- tribble(
+  ~Predito, ~`Neg     `, ~`Pos `,
+  "Neg",    "TN", "FN",
+  "Pos",    "FP", "TP"
+) %>%
+  kable() %>%
+  kable_styling(c("bordered", "basic"), full_width = FALSE, font_size = 20) %>%
+  add_header_above(c(" " = 1, "Observado" = 2), background = "white") %>%
+  collapse_rows(columns = 1, valign = "top") %>%
+  kableExtra::row_spec(0:2, background = "white", align = "center") %>%
+  kableExtra::column_spec(1, "3in", bold = TRUE) %>%
+  kableExtra::column_spec(2, "3in") %>%
+  kableExtra::column_spec(3, "2in")
+```
+
+
+# Matriz de Confusão
+
+.pull-left[
+```{r, echo = FALSE}
+cm
+```
+
+<br/>
+
+```{r, echo = FALSE}
+cm_num
+```
+]
+
+.pull-right[
+
+$$
+\begin{array}{lcc}
+\mbox{accuracy}  & = & \frac{TP + TN}{TP + TN + FP + FN}\\\\
+&   & \\\\
+\mbox{precision} & = & \frac{TP}{TP + FP}\\\\
+&   & \\\\
+\mbox{recall/TPR}    & = & \frac{TP}{TP + FN} \\\\
+&   & \\\\
+\mbox{F1 score}       & =& \frac{2}{1/\mbox{precision} + 1/\mbox{recall}}\\\\
+&   & \\\\
+\mbox{FPR}    & = & \frac{FP}{FP + TN}
+\end{array}
+$$
+
+]
+
+---
+
+# Nota de Corte (Threshold)
+
+.pull-left[
+
+```{r, echo=FALSE}
+confusion_matrix_kable(threshold = 0.1, font_size = 16)
+confusion_matrix_kable(threshold = 0.25, font_size = 16)
+confusion_matrix_kable(threshold = 0.5, font_size = 16)
+```
+
+]
+
+.pull-right[
+
+```{r, echo=FALSE}
+confusion_matrix_kable(threshold = 0.75, font_size = 16)
+confusion_matrix_kable(threshold = 0.9, font_size = 16)
+```
+
+]
+
+
+---
+
+
+# Curva ROC
+
+.pull-left[
+```{r, echo = FALSE}
+roc_df <- email_tratado %>%
+  mutate(`classe observada` = as.factor(`classe observada`)) %>%
+  yardstick::roc_curve(`classe observada`, `prob`, event_level = "second")
+
+roc_df_points <- roc_df %>%
+  filter(.threshold %in% c(0.1, 0.25, 0.5, 0.75, 0.9))
+
+roc_curve <- roc_df %>%
+  ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path(size = 2) +
+  geom_point(data = roc_df_points, size = 7, colour = "red", shape = 21) +
+  geom_point(data = roc_df_points, size = 5, colour = "red") +
+  geom_abline(lty = "dashed", size = 1) +
+  coord_equal() +
+  theme_minimal(28) +
+  labs(x = "False Positive Rate (FPR)", y = "True Positive Rate (TPR)")
+
+roc_curve
+```
+
+[An introduction to ROC analysis](https://people.inf.elte.hu/kiss/11dwhdm/roc.pdf)
+
+]
+
+.pull-right[
+
+<br/>
+
+```{r, echo = FALSE}
+cm
+```
+
+
+$$
+\begin{array}{lcc}
+\mbox{TPR}    & = & \frac{TP}{TP + FN} \\\\
+&   & \\\\
+\mbox{FPR}    & = & \frac{FP}{FP + TN}
+\end{array}
+$$
+
+]
+
+
+
+---
+
+# Curva ROC - Métrica AUC
+
+.pull-left[
+
+```{r, echo = FALSE}
+
+auc <- email_tratado %>%
+  mutate(`classe observada` = as.factor(`classe observada`)) %>%
+  yardstick::roc_auc(`classe observada`, `prob`, event_level = "second")
+
+roc_curve +
+  stat_smooth(
+        geom = 'area', method = 'loess', span = 1/3,
+        alpha = 0.3, fill = "royalblue") +
+  geom_label(x = 0.5, y = 0.25, label = paste("AUC = ", scales::percent(auc$.estimate)), hjust = 0, fill = "transparent", size = 7)
+```
+
+[An introduction to ROC analysis](https://people.inf.elte.hu/kiss/11dwhdm/roc.pdf)
+
+]
+
+.pull-right[
+
+<br/>
+
+```{r, echo = FALSE}
+cm
+```
+
+$$
+\mbox{AUC} = \mbox{Area Under The ROC Curve}
+$$
+]
+
+**PS:** AUC varia de 0.5 a 1.0. O que significa se AUC for zero?
+
+
+
+---
+
+# Curva ROC - Playground
+
+
+<a href = "http://arogozhnikov.github.io/2015/10/05/roc-curve.html">
+<img src="static/img/roc_curve.gif" style=" display: block; margin-left: auto; margin-right: auto;"></img>
+</a>
+
+
+---
+
+# Múltiplas Notas de Corte
+
+.pull-left[
+
+Risco por Segmentação
+
+```{r, echo=FALSE, eval=TRUE}
+tribble(
+  ~Predito,        ~`Neg     `, ~`Pos `, ~` N `, ~` Risco `,
+  "A (até 0,19)",    "90", "11", "101",  "11%",
+  "B (até 0,44)",    "60", "40", "100",  "40%",
+  "C (até 0,62)",    "39", "60",  "99",  "60%",
+  "D (0,62 ou +)","20",  "80", "100", "80%"
+) %>%
+  kable() %>%
+  kable_styling(c("bordered", "basic"), full_width = FALSE, font_size = 20) %>%
+  add_header_above(c(" " = 1, "Observado" = 2, " ", " "), background = "white") %>%
+  collapse_rows(columns = 1, valign = "top") %>%
+  kableExtra::row_spec(0:4, background = "white", align = "center") %>%
+  kableExtra::column_spec(1, "3in", bold = TRUE) %>%
+  kableExtra::column_spec(2, "3in") %>%
+  kableExtra::column_spec(3, "2in")
+```
+
+]
+
+.pull-right[
+
+Usamos o `score` como preferirmos
+
+```{r, eval = FALSE, echo=TRUE}
+dados %>%
+  mutate(
+    segmento = case_when(
+      score <  0.19 ~ "A",
+      score <  0.44 ~ "B",
+      score <  0.62 ~ "C",
+      score >= 0.62 ~ "D"))
+```
+
+]
+
+
+```{r, echo=FALSE, eval=TRUE, fig.width=16, fig.height=3.8, out.width=800, }
+set.seed(1)
+df <- tibble(
+  score_ = c(rbinom(50, 5, prob = 0.45), rbinom(200, 16, prob = 0.4)+3, rbinom(50, 20, prob = 0.6)+5),
+  score = (score_ - min(score_))/(max(score_) - min(score_)),
+  segmento = case_when(
+    score <  0.20 ~ "A",
+    score <  0.40 ~ "B",
+    score <  0.60 ~ "C",
+    score >= 0.60 ~ "D"))
+
+ggplot(df) +
+  geom_bar(aes(x = score, fill = segmento)) +
+  labs(y = "contratos", title = "Scores dos contratos de Junho de 2021") +
+  theme_minimal(25)
+
+```
+
+---
+class: middle, center
+
+## Exemplo 05
+
+---
+class: middle, center
+
+## Exercício 02

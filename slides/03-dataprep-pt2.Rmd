@@ -1,0 +1,56 @@
+---
+title: "Introdução ao Machine Learning"
+subtitle: "Dataprep"
+author: "<img src = 'https://d33wubrfki0l68.cloudfront.net/9b0699f18268059bdd2e5c21538a29eade7cbd2b/67e5c/img/logo/cursor1-5.png' width = '40%'>"
+date: "`r paste(lubridate::month(Sys.Date(), label = TRUE, abbr = FALSE), 'de', lubridate::year(Sys.Date()))`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["default", "default-fonts", "static/css/custom.css", "static/css/xaringan-themer.css"]
+    nature:
+      ratio: '16:9'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(magrittr)
+library(knitr)
+library(tidyverse)
+library(ISLR)
+library(kableExtra)
+library(rpart)
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  message = FALSE, 
+  warning = FALSE,
+  fig.width=6, 
+  fig.height=6,
+  fig.align='center'
+)
+theme_set(theme_minimal(14))
+options(htmltools.dir.version = FALSE)
+```
+
+
+class: middle, center, inverse
+
+# Dataprep Parte II
+
+---
+
+# Conteúdo
+
+- Transformações n:n
+
+- Imputação de missings
+
+- Eliminação prévia de features
+
+- Normalização
+
+- 

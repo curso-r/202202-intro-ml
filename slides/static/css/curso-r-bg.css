@@ -1,0 +1,6 @@
+
+.remark-slide-content:not(.title-slide):not(.inverse){
+  background-image: url("https://d33wubrfki0l68.cloudfront.net/295643c6243701ae6a9bac3fb8ad467ff0ce3c84/d1785/img/logo/cursor1-41.png");
+  background-position: 95% 8%;
+  background-size: 160px;
+}
