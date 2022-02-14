@@ -22,6 +22,8 @@ Imports:
     rmarkdown,
     stringr,
     tibble,
-    usethis
+    usethis,
+    tidyverse,
+    tidymodels
 Remotes: 
     curso-r/CursoRopen
