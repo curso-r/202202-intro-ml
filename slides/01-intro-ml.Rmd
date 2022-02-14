@@ -928,7 +928,7 @@ $$
 
 ## Métricas - "Melhor f(x)" segundo o quê?
 
-Na regressão logística a estratégia é a mesma. Queremos a curva que **erre menos**.
+Na classificação a estratégia é a mesma. Queremos a curva que **erre menos**.
 
 Exemplo: Modelo de regressão logística $f(x) = \frac{1}{1 + e^{-(\beta_0 + \beta_1 x)}}$. 
 
@@ -1277,6 +1277,16 @@ diamondsinho_novos_com_previsao <- diamondsinho_novos %>%
     price_pred2 = predict(ajuste_modelo2, new_data = diamondsinho_novos)$.pred
   )
 ```
+
+
+# Overfitting (sobreajuste)
+
+- Acontece quando um modelo funciona muito pior quando usado com dados novos quando
+  comparado com a performance nos dados em que foi treinado.
+- Uma das principais preocupações quando ajustamos modelos em ML.
+- **Solução**: Sempre testar o modelo com dados 'novos'.
+
+---
 
 # Overfitting (sobreajuste)
 
