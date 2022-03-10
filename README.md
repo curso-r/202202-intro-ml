@@ -8,7 +8,7 @@ abaixo irá fazer isso para você.
 
 ``` r
 install.packages("usethis")
-usethis::create_project("introml202108")
+usethis::create_project("introml202202")
 ```
 
 ## Configuração: Instalar pacotes
