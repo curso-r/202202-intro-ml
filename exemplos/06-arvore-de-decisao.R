@@ -36,7 +36,6 @@ cp <- as.data.frame(credit_tree_fit$fit$cptable)
 cp
 
 
-
 # exemplo 2) credit data --------------------------------------------------
 # remotes::install_github("grantmcdermott/parttree")
 library(parttree)
