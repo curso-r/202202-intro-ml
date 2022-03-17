@@ -33,11 +33,13 @@ ga_valid <- testing(ga_initial_split)
 ga_resamples <- sliding_period(ga_train, index = month, period = "month",
                                lookback = 5, step=2)
 
+aff <- rsample::analysis(ga_resamples$splits[[1]])
+
 # Exploratória ------------------------------------------------------------
 
-skimr::skim(ga_train)
-# visdat::vis_miss(ga_train)
-# ga_train %>%
+skimr::skim(ga_train %>% sample_n(10000))
+# visdat::vis_miss(ga_train %>% sample_n(1000))
+# ga_train  %>% sample_n(1000) %>%
 #   select(where(is.numeric)) %>%
 #   cor(use = "pairwise.complete.obs") %>%
 #   corrplot::corrplot()

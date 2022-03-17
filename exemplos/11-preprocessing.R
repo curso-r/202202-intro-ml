@@ -5,7 +5,7 @@ library(archive)
 # Read --------------------------------------------------------------------
 
 # base full: https://storage.googleapis.com/deep-learning-com-r/ga-customer-revenue-prediction.zip
-download.file("https://storage.googleapis.com/deep-learning-com-r/ga-customer-revenue-prediction.zip", "ga-customer-revenue-prediction.zip")
+# download.file("https://storage.googleapis.com/deep-learning-com-r/ga-customer-revenue-prediction.zip", "ga-customer-revenue-prediction.zip")
 
 # usamos o archive p/ não precisar des-compactar
 con <- archive::archive_read("ga-customer-revenue-prediction.zip", "train_v2.csv")

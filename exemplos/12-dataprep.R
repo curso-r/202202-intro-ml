@@ -4,6 +4,7 @@
 
 
 library(tidyverse)
+library(lubridate)
 download.file("https://storage.googleapis.com/deep-learning-com-r/ga-crp-train.rds", "ga-crp-train.rds")
 ga_transactions <- readRDS("ga-crp-train.rds")
 
@@ -29,11 +30,10 @@ resposta <- ga_transactions %>%
 
 glimpse(resposta)
 hist(resposta$target[resposta$target > 0 & resposta$month == "2018-04-01"], breaks = 1000)
-summary(resposta$target > 0)
+table(resposta$target > 0)
 
 
 # features ----------------------------------------------------------------
-library(lubridate)
 
 # gera_features_de_x_semanas_atras()
 gera_features_de_x_semanas_atras <- function(data, month, n_semanas_atras = 4) {
