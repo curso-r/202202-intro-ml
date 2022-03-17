@@ -1,4 +1,4 @@
-
+# https://www.kaggle.com/c/ga-customer-revenue-prediction
 # Pacotes -----------------------------------------------------------------
 library(tidymodels)
 library(tidyverse)
@@ -35,7 +35,7 @@ ga_resamples <- sliding_period(ga_train, index = month, period = "month",
 
 # Exploratória ------------------------------------------------------------
 
-# skimr::skim(ga_train)
+skimr::skim(ga_train)
 # visdat::vis_miss(ga_train)
 # ga_train %>%
 #   select(where(is.numeric)) %>%

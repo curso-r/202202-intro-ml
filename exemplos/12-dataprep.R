@@ -1,9 +1,10 @@
+# https://www.kaggle.com/c/ga-customer-revenue-prediction
 # Objetivo: prever quais clientes tem o maior potencial de compra no próximo mês
 # para fins de ação de marketing.
 
 
 library(tidyverse)
-# download.file("https://storage.googleapis.com/deep-learning-com-r/ga-crp-train.rds", "ga-crp-train.rds")
+download.file("https://storage.googleapis.com/deep-learning-com-r/ga-crp-train.rds", "ga-crp-train.rds")
 ga_transactions <- readRDS("ga-crp-train.rds")
 
 glimpse(ga_transactions)
